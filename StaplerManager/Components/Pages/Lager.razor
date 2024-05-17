@@ -1,0 +1,51 @@
+﻿@page "/lager"
+@rendermode InteractiveServer
+@using MudBlazor
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Lagerarbeiter</PageTitle>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@OpenDialog">Lieferung hinzufügen</MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" Href="/">Zurück</MudButton>
+<MudDialog IsVisible="@isOpen" OnBackdropClick="@CloseDialog" Style="width:20vw;height:30vh">
+    <DialogContent>
+        <h3>Hinzufügen</h3>
+        <MudTextField Required @bind-Value="@newDelivery.Name" Label="Name" />
+        <MudTextField Required @bind-Value="@newDelivery.Sender" Label="Woher?" />
+        <MudTextField Required @bind-Value="@newDelivery.Empfehler" Label="Wohin?" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@CloseDialog">Abbrechen</MudButton>
+        <MudButton OnClick="@AddDelivery">Hinzufügen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool isOpen = false;
+    private Delivery newDelivery = new Delivery();
+
+    private void OpenDialog()
+    {
+        isOpen = true;
+    }
+    private void CloseDialog()
+    {
+        isOpen = false;
+        StateHasChanged();
+    }
+    private async Task AddDelivery()
+    {
+        if (string.IsNullOrWhiteSpace(newDelivery.Name) ||
+            string.IsNullOrWhiteSpace(newDelivery.Sender) ||
+            string.IsNullOrWhiteSpace(newDelivery.Empfehler))
+        {
+            // One or more fields are empty, do not add the delivery
+            return;
+        }
+
+        await File.AppendAllTextAsync("data.csv", $"{newDelivery.Name},{newDelivery.Sender},{newDelivery.Empfehler}\n");
+
+        newDelivery = new Delivery();
+        CloseDialog();
+    }
+}

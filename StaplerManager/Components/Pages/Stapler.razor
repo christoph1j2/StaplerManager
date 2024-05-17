@@ -1,0 +1,52 @@
+﻿@page "/stapler"
+@rendermode InteractiveServer
+@using MudBlazor
+@inject IJSRuntime JsRuntime
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<PageTitle>Gabelstaplerfahrer</PageTitle>
+<MudButton Variant="Variant.Filled" Color="Color.Secondary" Href="/">Zurück</MudButton>
+
+<MudTable Items="@deliveries" Dense="@true" Hover="@true" Bordered="@true" Striped="@true" CanCancelEdit="@true"
+          CustomHeader="@true">
+     <HeaderContent>
+        <MudTHeadRow>
+            <MudTh>Name</MudTh>
+            <MudTh>Sender</MudTh>
+            <MudTh>Empfehler</MudTh>
+            <MudTh>Aktion</MudTh>
+        </MudTHeadRow>
+    </HeaderContent>
+    <RowTemplate Context="delivery">
+        <MudTd>@delivery.Name</MudTd>
+        <MudTd>@delivery.Sender</MudTd>
+        <MudTd>@delivery.Empfehler</MudTd>
+        <MudTd>
+            <MudButton OnClick="@( () => CompleteDelivery(delivery) )">Zustellen</MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<Delivery> deliveries = new List<Delivery>();
+    protected override async Task OnInitializedAsync()
+    {
+        var lines = await File.ReadAllLinesAsync("data.csv");
+        foreach(var line in lines)
+        {
+            var parts = line.Split(',');
+            deliveries.Add(new Delivery { Name = parts[0], Sender = parts[1], Empfehler = parts[2]});
+        }
+    }
+    private async Task CompleteDelivery(Delivery delivery)
+    {
+        deliveries.Remove(delivery);
+
+        var lines = deliveries.Select(d => $"{d.Name},{d.Sender},{d.Empfehler}");
+        await File.WriteAllLinesAsync("data.csv", lines);
+        StateHasChanged();
+    }
+}
